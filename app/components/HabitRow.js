@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function HabitRow({ habit, rank, onVote }) {
     const [voted, setVoted] = useState(false);
@@ -53,9 +54,18 @@ export default function HabitRow({ habit, rank, onVote }) {
                 <p className="font-semibold text-base md:text-lg leading-snug tracking-tight">
                     {habit.text}
                 </p>
-                <p className="text-xs opacity-40 mt-1">
-                    shared {habit.createdAt}
-                </p>
+                <div className="flex items-center gap-3 mt-1">
+                    <span className="text-xs opacity-40">
+                        shared {habit.createdAt}
+                    </span>
+                    <Link
+                        href={`/build?habit=${encodeURIComponent(habit.text)}`}
+                        className="text-xs text-primary/60 hover:text-primary transition-colors duration-200
+                          opacity-0 group-hover:opacity-100"
+                    >
+                        build this →
+                    </Link>
+                </div>
             </div>
 
             {/* Upvote button — PH style */}
