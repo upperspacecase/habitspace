@@ -1,0 +1,149 @@
+[
+  {
+    "id": "h001",
+    "text": "Take a 10-minute walk after lunch",
+    "author": "Anonymous",
+    "votes": 47,
+    "createdAt": "2026-01-15"
+  },
+  {
+    "id": "h002",
+    "text": "Write down 3 things you're grateful for before bed",
+    "author": "Anonymous",
+    "votes": 82,
+    "createdAt": "2026-01-16"
+  },
+  {
+    "id": "h003",
+    "text": "Drink a full glass of water first thing in the morning",
+    "author": "Anonymous",
+    "votes": 91,
+    "createdAt": "2026-01-17"
+  },
+  {
+    "id": "h004",
+    "text": "Put your phone in another room while you sleep",
+    "author": "Anonymous",
+    "votes": 63,
+    "createdAt": "2026-01-18"
+  },
+  {
+    "id": "h005",
+    "text": "Spend 5 minutes doing absolutely nothing",
+    "author": "Anonymous",
+    "votes": 55,
+    "createdAt": "2026-01-20"
+  },
+  {
+    "id": "h006",
+    "text": "Read one page of a book every day",
+    "author": "Anonymous",
+    "votes": 74,
+    "createdAt": "2026-01-21"
+  },
+  {
+    "id": "h007",
+    "text": "Make your bed as soon as you get up",
+    "author": "Anonymous",
+    "votes": 38,
+    "createdAt": "2026-01-22"
+  },
+  {
+    "id": "h008",
+    "text": "Call one person you care about each week",
+    "author": "Anonymous",
+    "votes": 66,
+    "createdAt": "2026-01-25"
+  },
+  {
+    "id": "h009",
+    "text": "Cook one meal from scratch every week",
+    "author": "Anonymous",
+    "votes": 42,
+    "createdAt": "2026-01-28"
+  },
+  {
+    "id": "h010",
+    "text": "Take 3 deep breaths before responding to something stressful",
+    "author": "Anonymous",
+    "votes": 59,
+    "createdAt": "2026-01-30"
+  },
+  {
+    "id": "h011",
+    "text": "Stretch for 2 minutes when you wake up",
+    "author": "Anonymous",
+    "votes": 49,
+    "createdAt": "2026-02-01"
+  },
+  {
+    "id": "h012",
+    "text": "Say thank you to someone who doesn't expect it",
+    "author": "Anonymous",
+    "votes": 71,
+    "createdAt": "2026-02-02"
+  },
+  {
+    "id": "h013",
+    "text": "Leave your desk for at least 5 minutes every hour",
+    "author": "Anonymous",
+    "votes": 35,
+    "createdAt": "2026-02-03"
+  },
+  {
+    "id": "h014",
+    "text": "Write one sentence about how you feel today",
+    "author": "Anonymous",
+    "votes": 29,
+    "createdAt": "2026-02-04"
+  },
+  {
+    "id": "h015",
+    "text": "Listen to a song that makes you feel good",
+    "author": "Anonymous",
+    "votes": 44,
+    "createdAt": "2026-02-05"
+  },
+  {
+    "id": "h016",
+    "text": "Eat one meal without looking at a screen",
+    "author": "Anonymous",
+    "votes": 53,
+    "createdAt": "2026-02-06"
+  },
+  {
+    "id": "h017",
+    "text": "Take a different route somewhere familiar",
+    "author": "Anonymous",
+    "votes": 22,
+    "createdAt": "2026-02-07"
+  },
+  {
+    "id": "h018",
+    "text": "Spend 10 minutes in sunlight every morning",
+    "author": "Anonymous",
+    "votes": 67,
+    "createdAt": "2026-02-08"
+  },
+  {
+    "id": "h019",
+    "text": "Say no to one thing that doesn't serve you this week",
+    "author": "Anonymous",
+    "votes": 41,
+    "createdAt": "2026-02-09"
+  },
+  {
+    "id": "h020",
+    "text": "Tidy one small area of your space every day",
+    "author": "Anonymous",
+    "votes": 36,
+    "createdAt": "2026-02-10"
+  },
+  {
+    "id": "h021",
+    "text": "Smile at a stranger once a daySmile at a stranger once a day",
+    "author": "Anonymous",
+    "votes": 0,
+    "createdAt": "2026-02-12"
+  }
+]
