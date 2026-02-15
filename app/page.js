@@ -1,43 +1,19 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import HabitRow from "./components/HabitRow";
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export default function Home() {
-  const [habits, setHabits] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
-  const fetchHabits = useCallback(async () => {
-    try {
-      const res = await fetch("/api/habits");
-      const data = await res.json();
-      // Sort by votes descending (like PH's "top" view)
-      const sorted = data.sort((a, b) => b.votes - a.votes);
-      setHabits(sorted);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to fetch habits:", err);
-      setLoading(false);
-    }
-  }, []);
-
+  // If user is already signed in, redirect to dashboard
   useEffect(() => {
-    fetchHabits();
-  }, [fetchHabits]);
-
-  const handleVote = async (id) => {
-    // Optimistic update — re-sort after voting
-    setHabits((prev) => {
-      const updated = prev.map((h) =>
-        h.id === id ? { ...h, votes: h.votes + 1 } : h
-      );
-      return updated.sort((a, b) => b.votes - a.votes);
-    });
-  };
-
-  // Group by date label
-  const today = new Date().toISOString().split("T")[0];
+    const email = localStorage.getItem("solo_email");
+    if (email) {
+      router.push("/dashboard");
+    }
+  }, [router]);
 
   return (
     <div className="min-h-[100dvh] flex flex-col">
@@ -46,83 +22,113 @@ export default function Home() {
         <div className="max-w-2xl mx-auto flex items-center justify-between px-6 py-4">
           <h1 className="text-lg font-bold tracking-tight">
             habit<span className="text-primary">space</span>
+            <span className="text-xs opacity-30 ml-1.5">solo</span>
           </h1>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/build"
-              className="btn btn-ghost btn-sm rounded-xl gap-1.5 text-sm h-9"
-            >
-              🌱 Build a habit
-            </Link>
-            <Link
-              href="/submit"
-              className="btn btn-primary btn-sm rounded-xl gap-1.5 text-sm h-9"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className="w-4 h-4"
-              >
-                <path d="M10 3.75a.75.75 0 01.75.75v4.5h4.5a.75.75 0 010 1.5h-4.5v4.5a.75.75 0 01-1.5 0v-4.5h-4.5a.75.75 0 010-1.5h4.5v-4.5A.75.75 0 0110 3.75z" />
-              </svg>
-              Submit
-            </Link>
-          </div>
+          <Link
+            href="/start"
+            className="btn btn-ghost btn-sm rounded-xl text-sm opacity-60 hover:opacity-100"
+          >
+            Sign in
+          </Link>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 max-w-2xl mx-auto w-full px-4 md:px-6 py-8">
-        {loading ? (
-          <div className="flex items-center justify-center py-20">
-            <span className="loading loading-ring loading-lg text-primary"></span>
+      {/* Hero */}
+      <main className="flex-1 flex items-center justify-center px-6 pb-20">
+        <div className="max-w-lg text-center animate-slide-in">
+          {/* Big visual */}
+          <div className="text-7xl md:text-8xl mb-8 animate-flame">
+            {"\u{1F525}"}
           </div>
-        ) : habits.length > 0 ? (
-          <>
-            {/* Section header */}
-            <div className="mb-4 px-2">
-              <h2 className="text-sm font-semibold opacity-50 uppercase tracking-wider">
-                Top habits today
-              </h2>
-            </div>
 
-            {/* Habit list */}
-            <div className="flex flex-col divide-y divide-white/5">
-              {habits.map((habit, index) => (
-                <HabitRow
-                  key={habit.id}
-                  habit={habit}
-                  rank={index + 1}
-                  onVote={handleVote}
-                />
+          <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight mb-4">
+            One habit.
+            <br />
+            <span className="text-primary">Built to last.</span>
+          </h2>
+
+          <p className="text-lg md:text-xl opacity-50 mb-4 max-w-md mx-auto leading-relaxed">
+            Most habit apps let you track everything. That's why they fail.
+          </p>
+          <p className="opacity-40 mb-10 max-w-sm mx-auto leading-relaxed">
+            Solo enforces one habit at a time. You start impossibly small,
+            prove consistency, and the difficulty scales automatically.
+            When you master it, it graduates — and you pick the next one.
+          </p>
+
+          {/* CTA */}
+          <Link
+            href="/start"
+            className="btn btn-primary rounded-2xl h-14 px-10 text-base font-semibold
+              shadow-lg shadow-primary/25 hover:shadow-primary/40
+              transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+          >
+            Start your first habit
+          </Link>
+
+          {/* How it works */}
+          <div className="mt-20 text-left">
+            <h3 className="text-sm font-semibold opacity-30 uppercase tracking-wider mb-6 text-center">
+              How it works
+            </h3>
+            <div className="flex flex-col gap-6">
+              {[
+                {
+                  step: "1",
+                  title: "Pick one habit",
+                  desc: "Choose from templates or create your own. Just one. That's the whole point.",
+                },
+                {
+                  step: "2",
+                  title: "Start impossibly small",
+                  desc: "Want to meditate? Start with 60 seconds. Want to read? Start with 1 page. No excuses, no friction.",
+                },
+                {
+                  step: "3",
+                  title: "Show up daily",
+                  desc: "Check in each day. We'll email you a reminder. Your streak grows. One tap is all it takes.",
+                },
+                {
+                  step: "4",
+                  title: "Auto-level up",
+                  desc: "After 7 days of consistency, the difficulty nudges up. You've earned it. 5 levels per habit.",
+                },
+                {
+                  step: "5",
+                  title: "Graduate and stack",
+                  desc: "Complete all levels and the habit graduates. Pick the next one. Your stack of conquered habits grows.",
+                },
+              ].map((item) => (
+                <div key={item.step} className="flex gap-4 items-start">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold shrink-0">
+                    {item.step}
+                  </div>
+                  <div>
+                    <h4 className="font-semibold mb-0.5">{item.title}</h4>
+                    <p className="text-sm opacity-40 leading-relaxed">
+                      {item.desc}
+                    </p>
+                  </div>
+                </div>
               ))}
             </div>
-
-            {/* Bottom CTA */}
-            <div className="text-center mt-12 pb-8 flex flex-col items-center gap-3">
-              <Link
-                href="/build"
-                className="btn btn-ghost btn-sm rounded-xl opacity-60 hover:opacity-100"
-              >
-                🌱 Help me build a habit
-              </Link>
-              <Link
-                href="/submit"
-                className="btn btn-ghost btn-sm rounded-xl opacity-40 hover:opacity-80"
-              >
-                or submit a new one →
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="text-center py-20">
-            <p className="text-lg opacity-60">No habits yet.</p>
-            <Link href="/submit" className="btn btn-primary mt-4 rounded-2xl">
-              Be the first to share one
-            </Link>
           </div>
-        )}
+
+          {/* Bottom CTA */}
+          <div className="mt-16 pb-8">
+            <Link
+              href="/start"
+              className="btn btn-primary rounded-2xl h-14 px-10 text-base font-semibold
+                shadow-lg shadow-primary/25 hover:shadow-primary/40
+                transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+            >
+              Start building
+            </Link>
+            <p className="text-xs opacity-20 mt-4">
+              Free. No account needed beyond your email.
+            </p>
+          </div>
+        </div>
       </main>
     </div>
   );

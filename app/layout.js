@@ -1,23 +1,12 @@
-import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata = {
-  title: "habitspace — discover one positive habit at a time",
+  title: "habitspace solo — one habit, built to last",
   description:
-    "A minimal space for discovering and sharing positive habits. One decision per screen. Inspired by the idea that small habits compound into big change.",
+    "Build one habit at a time. Start impossibly small, level up through consistency, and graduate when you've mastered it. Then pick the next one.",
   openGraph: {
-    title: "habitspace",
-    description: "Discover one positive habit at a time",
+    title: "habitspace solo",
+    description: "One habit at a time. Built to last.",
     type: "website",
   },
 };
@@ -25,9 +14,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" data-theme="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className="antialiased">
         {children}
       </body>
     </html>
