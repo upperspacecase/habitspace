@@ -1,132 +1,79 @@
 @import "tailwindcss";
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&display=swap');
 
 @plugin "daisyui" {
-  themes: dark;
+  themes: light;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: #FF3B30;
+  --color-success: #22C55E;
+  --color-border: #E5E5E5;
 }
 
 :root {
-  --background: #0a0a0f;
-  --foreground: #f0f0f5;
+  --background: #FAFAFA;
+  --foreground: #000000;
+  --accent: #FF3B30;
+  --success: #22C55E;
+  --border: #E5E5E5;
+  --text-secondary: #666666;
+  --text-muted: #999999;
+  --text-disabled: #CCCCCC;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* Subtle animated gradient background */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 50% 40% at 50% 0%, oklch(0.45 0.15 270 / 0.15), transparent),
-    radial-gradient(ellipse 40% 50% at 80% 80%, oklch(0.40 0.12 330 / 0.10), transparent),
-    radial-gradient(ellipse 60% 40% at 10% 60%, oklch(0.35 0.10 200 / 0.08), transparent);
-  animation: bg-shift 20s ease-in-out infinite alternate;
+/* Serif display font for headlines */
+.font-display {
+  font-family: 'DM Serif Display', Georgia, serif;
 }
 
-@keyframes bg-shift {
-  0% {
-    opacity: 1;
-  }
+/* Section number pattern: 01 RED + LABEL BLACK */
+.section-number {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+}
 
-  50% {
-    opacity: 0.7;
-  }
+.section-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: #000000;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
 
-  100% {
-    opacity: 1;
-  }
+/* Divider */
+.divider-line {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
 }
 
 /* Card animations */
 @keyframes slide-in {
   from {
     opacity: 0;
-    transform: translateY(20px) scale(0.97);
+    transform: translateY(12px);
   }
-
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-  }
-}
-
-@keyframes slide-out-left {
-  to {
-    opacity: 0;
-    transform: translateX(-80px) rotate(-3deg) scale(0.95);
-  }
-}
-
-@keyframes slide-out-right {
-  to {
-    opacity: 0;
-    transform: translateX(80px) rotate(3deg) scale(0.95);
+    transform: translateY(0);
   }
 }
 
 .animate-slide-in {
-  animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-.animate-slide-out-left {
-  animation: slide-out-left 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-}
-
-.animate-slide-out-right {
-  animation: slide-out-right 0.3s cubic-bezier(0.55, 0, 1, 0.45) forwards;
-}
-
-@keyframes vote-pulse {
-  0% {
-    background-color: transparent;
-  }
-
-  30% {
-    background-color: oklch(0.65 0.15 270 / 0.08);
-  }
-
-  100% {
-    background-color: transparent;
-  }
-}
-
-.animate-vote-pulse {
-  animation: vote-pulse 0.6s ease-out;
-}
-
-/* Flame flicker animation */
-@keyframes flame-flicker {
-  0%, 100% {
-    transform: scale(1) rotate(0deg);
-    filter: brightness(1);
-  }
-  25% {
-    transform: scale(1.05) rotate(-2deg);
-    filter: brightness(1.1);
-  }
-  50% {
-    transform: scale(0.97) rotate(1deg);
-    filter: brightness(1.05);
-  }
-  75% {
-    transform: scale(1.03) rotate(-1deg);
-    filter: brightness(1.15);
-  }
-}
-
-.animate-flame {
-  animation: flame-flicker 2s ease-in-out infinite;
-  display: inline-block;
+  animation: slide-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 /* Check-in success animation */
@@ -161,6 +108,104 @@ body::before {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.5 0 0 / 0.3);
+  background: #CCCCCC;
   border-radius: 999px;
+}
+
+/* Heatmap grid cell */
+.heatmap-cell {
+  width: 100%;
+  aspect-ratio: 1;
+}
+
+.heatmap-cell-empty {
+  background: #F5F5F5;
+}
+
+.heatmap-cell-done {
+  background: var(--success);
+}
+
+.heatmap-cell-missed {
+  background: #F5F5F5;
+}
+
+/* Implementation intention card */
+.intention-card {
+  background: #FF3B3010;
+  border-left: 3px solid var(--accent);
+  padding: 16px 20px;
+}
+
+.intention-card .intention-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+/* Identity chip */
+.identity-chip {
+  display: inline-flex;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.identity-chip:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.identity-chip.selected {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+
+/* Square checkbox */
+.habit-checkbox {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.habit-checkbox.checked {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+.habit-checkbox.active {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Active habit card (red left border) */
+.habit-card-active {
+  border-left: 3px solid var(--accent);
+}
+
+/* Bottom tab bar */
+.tab-bar {
+  border-top: 1px solid var(--border);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.tab-bar-item {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.tab-bar-item.active {
+  color: var(--accent);
 }

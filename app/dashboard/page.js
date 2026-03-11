@@ -2,321 +2,151 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import StreakFlame from "../components/StreakFlame";
-import LevelProgress from "../components/LevelProgress";
+import StatusBar from "@/app/components/StatusBar";
+import TabBar from "@/app/components/TabBar";
+import SectionHeader from "@/app/components/SectionHeader";
+import HabitCard from "@/app/components/HabitCard";
+
+function getGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function Dashboard() {
   const router = useRouter();
-  const [user, setUser] = useState(null);
-  const [streak, setStreak] = useState(0);
+  const [userName, setUserName] = useState("");
+  const [habits, setHabits] = useState([]);
+  const [checkedIn, setCheckedIn] = useState({});
   const [loading, setLoading] = useState(true);
-  const [checkingIn, setCheckingIn] = useState(false);
-  const [checkedInToday, setCheckedInToday] = useState(false);
-  const [event, setEvent] = useState(null); // level_up | graduated
   const [error, setError] = useState("");
 
-  const fetchUser = useCallback(async () => {
-    const email = localStorage.getItem("solo_email");
+  const fetchHabits = useCallback(async () => {
+    const email = localStorage.getItem("habitspace_email");
     if (!email) {
       router.push("/start");
       return;
     }
 
     try {
-      const res = await fetch(
-        `/api/users?email=${encodeURIComponent(email)}`
-      );
-      if (res.status === 404) {
-        localStorage.removeItem("solo_email");
+      const userRes = await fetch(`/api/users?email=${encodeURIComponent(email)}`);
+      if (userRes.status === 404) {
+        localStorage.removeItem("habitspace_email");
         router.push("/start");
         return;
       }
-      const data = await res.json();
-      setUser(data);
+      const userData = await userRes.json();
+      setUserName(userData.name || email.split("@")[0]);
 
-      // Calculate streak client-side (approximate — server is source of truth)
-      // The real streak comes from check-in response
+      const habitsRes = await fetch(`/api/habits?userId=${userData.id}`);
+      if (habitsRes.ok) {
+        const habitsData = await habitsRes.json();
+        setHabits(habitsData);
+      }
+
       setLoading(false);
     } catch (err) {
-      console.error("Failed to fetch user:", err);
+      console.error("Failed to fetch data:", err);
       setError("Failed to load your data");
       setLoading(false);
     }
   }, [router]);
 
   useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+    fetchHabits();
+  }, [fetchHabits]);
 
-  const handleCheckIn = async () => {
-    if (checkingIn || checkedInToday) return;
-    setCheckingIn(true);
-    setError("");
-
+  const handleCheckIn = async (habitId) => {
     try {
-      const email = localStorage.getItem("solo_email");
+      const email = localStorage.getItem("habitspace_email");
       const res = await fetch("/api/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        body: JSON.stringify({ email, habitId }),
       });
 
-      const data = await res.json();
-
       if (res.status === 409) {
-        setCheckedInToday(true);
-        setCheckingIn(false);
+        setCheckedIn((prev) => ({ ...prev, [habitId]: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) }));
         return;
       }
 
       if (!res.ok) {
+        const data = await res.json();
         throw new Error(data.error || "Check-in failed");
       }
 
-      setUser(data.user);
-      setStreak(data.streak);
-      setCheckedInToday(true);
+      const data = await res.json();
+      setCheckedIn((prev) => ({ ...prev, [habitId]: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }) }));
 
-      // Handle events
-      if (data.events && data.events.length > 0) {
-        setEvent(data.events[0]);
+      if (data.events?.some((e) => e.type === "graduated")) {
+        router.push("/graduated");
       }
     } catch (err) {
       setError(err.message);
-    } finally {
-      setCheckingIn(false);
     }
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem("solo_email");
-    router.push("/");
   };
 
   if (loading) {
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center">
-        <span className="loading loading-ring loading-lg text-primary"></span>
+      <div className="min-h-[100dvh] flex items-center justify-center" style={{ background: "#FAFAFA" }}>
+        <div style={{ fontSize: 14, color: "#999" }}>Loading...</div>
       </div>
     );
   }
-
-  // Graduation event screen
-  if (event && event.type === "graduated") {
-    return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6">
-        <div className="text-center animate-slide-in max-w-sm">
-          <div className="text-7xl mb-6">{"\u{1F393}"}</div>
-          <h2 className="text-3xl font-bold mb-3">Habit Graduated</h2>
-          <p className="text-lg opacity-70 mb-2">
-            <strong>{event.habitName}</strong> is now part of who you are.
-          </p>
-          <p className="opacity-40 text-sm mb-8">
-            {event.totalDays} days of showing up. That's extraordinary.
-          </p>
-          <div className="flex flex-col gap-3">
-            <Link
-              href="/next-habit"
-              className="btn btn-primary rounded-2xl px-8 h-14 text-base font-semibold
-                shadow-lg shadow-primary/25"
-            >
-              Pick your next habit
-            </Link>
-            <Link
-              href="/graduated"
-              className="btn btn-ghost btn-sm rounded-xl opacity-60"
-            >
-              View your stack
-            </Link>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Level up event screen
-  if (event && event.type === "level_up") {
-    return (
-      <div className="min-h-[100dvh] flex flex-col items-center justify-center px-6">
-        <div className="text-center animate-slide-in max-w-sm">
-          <div className="text-7xl mb-6">{"\u{2B06}\u{FE0F}"}</div>
-          <h2 className="text-3xl font-bold mb-3">Level Up!</h2>
-          <p className="opacity-70 mb-4">
-            You've proven consistency. Time to grow.
-          </p>
-          <div className="bg-base-200/60 backdrop-blur-xl border border-primary/20 rounded-2xl p-6 mb-8">
-            <p className="text-xs opacity-40 mb-2 uppercase tracking-wider">
-              New daily task
-            </p>
-            <p className="text-xl font-semibold">{event.newTask}</p>
-            <p className="text-sm opacity-40 mt-2">Level {event.newLevel} of 5</p>
-          </div>
-          <button
-            onClick={() => setEvent(null)}
-            className="btn btn-primary rounded-2xl px-8 h-14 text-base font-semibold
-              shadow-lg shadow-primary/25"
-          >
-            Got it, let's go
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // No active habit — prompt to pick next one
-  if (!user.activeHabit) {
-    return (
-      <div className="min-h-[100dvh] flex flex-col">
-        <header className="sticky top-0 z-50 backdrop-blur-xl bg-base-100/80 border-b border-white/5">
-          <div className="max-w-2xl mx-auto flex items-center justify-between px-6 py-4">
-            <h1 className="text-lg font-bold tracking-tight">
-              habit<span className="text-primary">space</span>
-              <span className="text-xs opacity-30 ml-1.5">solo</span>
-            </h1>
-            <button
-              onClick={handleLogout}
-              className="btn btn-ghost btn-sm rounded-xl text-xs opacity-40"
-            >
-              Sign out
-            </button>
-          </div>
-        </header>
-        <main className="flex-1 flex items-center justify-center px-6">
-          <div className="text-center animate-slide-in max-w-sm">
-            <div className="text-6xl mb-6">{"\u{1F389}"}</div>
-            <h2 className="text-2xl font-bold mb-3">Ready for the next one?</h2>
-            {user.graduatedHabits.length > 0 && (
-              <p className="opacity-50 text-sm mb-2">
-                You've graduated {user.graduatedHabits.length}{" "}
-                {user.graduatedHabits.length === 1 ? "habit" : "habits"} so far.
-              </p>
-            )}
-            <p className="opacity-40 text-sm mb-8">
-              Pick your next habit and keep building your stack.
-            </p>
-            <div className="flex flex-col gap-3">
-              <Link
-                href="/next-habit"
-                className="btn btn-primary rounded-2xl px-8 h-14 text-base font-semibold
-                  shadow-lg shadow-primary/25"
-              >
-                Pick next habit
-              </Link>
-              {user.graduatedHabits.length > 0 && (
-                <Link
-                  href="/graduated"
-                  className="btn btn-ghost btn-sm rounded-xl opacity-60"
-                >
-                  View graduated stack
-                </Link>
-              )}
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
-  // Main dashboard
-  const habit = user.activeHabit;
-  const currentLevelData = habit.levels[habit.currentLevel - 1];
 
   return (
-    <div className="min-h-[100dvh] flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-50 backdrop-blur-xl bg-base-100/80 border-b border-white/5">
-        <div className="max-w-2xl mx-auto flex items-center justify-between px-6 py-4">
-          <h1 className="text-lg font-bold tracking-tight">
-            habit<span className="text-primary">space</span>
-            <span className="text-xs opacity-30 ml-1.5">solo</span>
+    <div className="min-h-[100dvh] flex flex-col" style={{ background: "#FAFAFA" }}>
+      <StatusBar />
+
+      <main className="flex-1 pb-24" style={{ padding: "0 24px 96px" }}>
+        {/* Greeting */}
+        <div style={{ marginTop: 20, marginBottom: 4 }}>
+          <h1 className="font-display" style={{ fontSize: 32, lineHeight: 1.1, color: "#000" }}>
+            {getGreeting()}, {userName}
           </h1>
-          <div className="flex items-center gap-2">
-            {user.graduatedHabits.length > 0 && (
-              <Link
-                href="/graduated"
-                className="btn btn-ghost btn-sm rounded-xl text-xs opacity-40 gap-1"
-              >
-                {"\u{1F393}"} {user.graduatedHabits.length}
-              </Link>
-            )}
-            <button
-              onClick={handleLogout}
-              className="btn btn-ghost btn-sm rounded-xl text-xs opacity-40"
-            >
-              Sign out
-            </button>
-          </div>
         </div>
-      </header>
+        <p style={{ fontSize: 14, color: "#666", marginBottom: 32 }}>
+          You&apos;re becoming someone who shows up daily
+        </p>
 
-      {/* Main content */}
-      <main className="flex-1 max-w-md mx-auto w-full px-6 py-8 flex flex-col items-center">
-        <div className="w-full animate-slide-in">
-          {/* Streak */}
-          <div className="flex justify-center mb-8">
-            <StreakFlame streak={streak} />
-          </div>
+        {/* Divider */}
+        <div className="divider-line" style={{ marginBottom: 24 }} />
 
-          {/* Habit card */}
-          <div className="bg-base-200/60 backdrop-blur-xl border border-white/10 rounded-3xl p-8 mb-6 text-center">
-            <div className="text-4xl mb-4">{habit.emoji}</div>
-            <h2 className="text-sm font-semibold opacity-40 uppercase tracking-wider mb-2">
-              {habit.name}
-            </h2>
+        {/* Habits section */}
+        <SectionHeader number="01" label="YOUR HABITS" />
 
-            {/* Today's task */}
-            <p className="text-2xl md:text-3xl font-bold tracking-tight leading-snug mb-6">
-              {currentLevelData.task}
-            </p>
+        <div style={{ marginTop: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+          {habits.length === 0 && (
+            <div style={{ padding: 32, textAlign: "center" }}>
+              <p style={{ fontSize: 14, color: "#999" }}>No habits yet.</p>
+              <p style={{ fontSize: 13, color: "#CCC", marginTop: 4 }}>
+                Start building your first habit.
+              </p>
+            </div>
+          )}
 
-            {/* Check-in button */}
-            {checkedInToday ? (
-              <div className="animate-slide-in">
-                <div className="text-4xl mb-3">{"\u{2705}"}</div>
-                <p className="font-semibold text-primary">Done for today</p>
-                <p className="text-sm opacity-40 mt-1">See you tomorrow</p>
-              </div>
-            ) : (
-              <button
-                onClick={handleCheckIn}
-                disabled={checkingIn}
-                className="btn btn-primary w-full rounded-2xl h-16 text-lg font-semibold
-                  shadow-lg shadow-primary/25 hover:shadow-primary/40
-                  transition-all duration-200 hover:scale-[1.01] active:scale-[0.98]
-                  disabled:opacity-50"
-              >
-                {checkingIn ? (
-                  <span className="loading loading-spinner loading-md"></span>
-                ) : (
-                  "I did it"
-                )}
-              </button>
-            )}
-
-            {error && (
-              <div className="alert alert-error mt-4 rounded-2xl text-sm">
-                {error}
-              </div>
-            )}
-          </div>
-
-          {/* Level progress */}
-          <div className="px-4">
-            <LevelProgress
-              currentLevel={habit.currentLevel}
-              totalLevels={habit.levels.length}
-              completionsAtLevel={habit.completionsAtLevel}
-              daysRequired={currentLevelData.daysRequired}
-            />
-          </div>
-
-          {/* Started date */}
-          <p className="text-center text-xs opacity-25 mt-6">
-            Started {habit.startedAt}
-          </p>
+          {habits.map((habit, i) => (
+            <div key={habit.id || i} className="animate-slide-in" style={{ animationDelay: `${i * 60}ms` }}>
+              <HabitCard
+                habit={habit}
+                isActive={i === 0}
+                isCheckedIn={!!checkedIn[habit.id]}
+                checkinTime={checkedIn[habit.id] || null}
+                onCheckIn={() => handleCheckIn(habit.id)}
+              />
+            </div>
+          ))}
         </div>
+
+        {error && (
+          <div style={{ marginTop: 16, padding: 12, background: "#FF3B3015", fontSize: 13, color: "#FF3B30" }}>
+            {error}
+          </div>
+        )}
       </main>
+
+      <TabBar activeTab="Dashboard" />
     </div>
   );
 }

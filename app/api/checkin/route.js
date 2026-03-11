@@ -1,151 +1,72 @@
 import { NextResponse } from "next/server";
-import {
-  readUsers,
-  writeUsers,
-  readCheckins,
-  writeCheckins,
-  getUserByEmail,
-  hasCheckedInToday,
-  getCheckinsForUserAtLevel,
-  getTodayString,
-  calculateStreak,
-} from "@/lib/data";
-import { sendLevelUpEmail, sendGraduationEmail } from "@/lib/resend";
+import { readData, writeData, generateId } from "@/lib/db";
 
 // POST — record a daily check-in
 export async function POST(request) {
   try {
-    const { email } = await request.json();
+    const { habitId } = await request.json();
 
-    if (!email) {
+    if (!habitId) {
       return NextResponse.json(
-        { error: "Email is required" },
+        { error: "habitId is required" },
         { status: 400 }
       );
     }
 
-    const user = getUserByEmail(email);
-    if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    }
+    const habits = readData("habits");
+    const habitIndex = habits.findIndex((h) => h.id === habitId);
 
-    if (!user.activeHabit) {
+    if (habitIndex === -1) {
       return NextResponse.json(
-        { error: "No active habit. Pick a new one!" },
-        { status: 400 }
+        { error: "Habit not found" },
+        { status: 404 }
       );
     }
 
-    // Check if already checked in today
-    if (hasCheckedInToday(email)) {
+    const habit = habits[habitIndex];
+    const today = new Date().toISOString().split("T")[0];
+
+    // Check for duplicate check-in on same date
+    const checkins = readData("checkins");
+    const alreadyCheckedIn = checkins.some(
+      (c) => c.habitId === habitId && c.date === today
+    );
+
+    if (alreadyCheckedIn) {
       return NextResponse.json(
-        {
-          error: "already_checked_in",
-          message: "You already checked in today. See you tomorrow!",
-        },
+        { error: "Already checked in today for this habit" },
         { status: 409 }
       );
     }
 
-    const today = getTodayString();
-    const currentLevel = user.activeHabit.currentLevel;
-    const currentLevelData = user.activeHabit.levels[currentLevel - 1];
-
-    // Record the check-in
-    const checkins = readCheckins();
-    checkins.push({
-      email: email.toLowerCase().trim(),
+    // Create check-in
+    const newCheckin = {
+      id: generateId(),
+      habitId,
       date: today,
-      habitName: user.activeHabit.name,
-      level: currentLevel,
-      task: currentLevelData.task,
-    });
-    writeCheckins(checkins);
+      completedAt: new Date().toISOString(),
+    };
 
-    // Update user data
-    const users = readUsers();
-    const userIndex = users.findIndex(
-      (u) => u.email === email.toLowerCase().trim()
-    );
-    const updatedUser = users[userIndex];
+    checkins.push(newCheckin);
+    writeData("checkins", checkins);
 
-    updatedUser.activeHabit.completionsAtLevel += 1;
+    // Increment currentDay
+    habit.currentDay += 1;
 
-    // Calculate streak
-    const streak = calculateStreak(email);
-
-    // Check for events
-    const events = [];
-    const completionsNeeded = currentLevelData.daysRequired;
-    const totalLevels = updatedUser.activeHabit.levels.length;
-
-    if (updatedUser.activeHabit.completionsAtLevel >= completionsNeeded) {
-      if (currentLevel >= totalLevels) {
-        // GRADUATION
-        const totalCheckins = getCheckinsForUserAtLevel(
-          email,
-          updatedUser.activeHabit.name,
-          currentLevel
-        );
-        const allCheckins = checkins.filter(
-          (c) =>
-            c.email === email.toLowerCase().trim() &&
-            c.habitName === updatedUser.activeHabit.name
-        );
-
-        updatedUser.graduatedHabits.push({
-          name: updatedUser.activeHabit.name,
-          emoji: updatedUser.activeHabit.emoji,
-          completedAt: today,
-          totalDays: allCheckins.length,
-          finalLevel: currentLevelData.task,
-        });
-
-        events.push({
-          type: "graduated",
-          habitName: updatedUser.activeHabit.name,
-          totalDays: allCheckins.length,
-        });
-
-        // Send graduation email
-        sendGraduationEmail(
-          email,
-          updatedUser.activeHabit.name,
-          allCheckins.length
-        ).catch(console.error);
-
-        updatedUser.activeHabit = null;
-      } else {
-        // LEVEL UP
-        const newLevel = currentLevel + 1;
-        const newLevelData = updatedUser.activeHabit.levels[newLevel - 1];
-
-        updatedUser.activeHabit.currentLevel = newLevel;
-        updatedUser.activeHabit.completionsAtLevel = 0;
-
-        events.push({
-          type: "level_up",
-          newLevel,
-          newTask: newLevelData.task,
-        });
-
-        // Send level-up email
-        sendLevelUpEmail(
-          email,
-          updatedUser.activeHabit.name,
-          newLevel,
-          newLevelData.task
-        ).catch(console.error);
-      }
+    // Check for graduation
+    let graduated = false;
+    if (habit.currentDay >= habit.totalDays) {
+      habit.graduated = true;
+      graduated = true;
     }
 
-    writeUsers(users);
+    habits[habitIndex] = habit;
+    writeData("habits", habits);
 
     return NextResponse.json({
-      user: updatedUser,
-      streak,
-      events,
-      checkedIn: true,
+      checkin: newCheckin,
+      habit,
+      graduated,
     });
   } catch (error) {
     console.error("Check-in failed:", error);

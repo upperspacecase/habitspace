@@ -1,55 +1,76 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
+import { readData, writeData, generateId } from "@/lib/db";
 
-const DATA_PATH = path.join(process.cwd(), "data", "habits.json");
-
-function readHabits() {
-  const raw = fs.readFileSync(DATA_PATH, "utf-8");
-  return JSON.parse(raw);
-}
-
-function writeHabits(habits) {
-  fs.writeFileSync(DATA_PATH, JSON.stringify(habits, null, 2));
-}
-
-// GET — return all habits (client will handle random selection + seen tracking)
-export async function GET() {
+// GET — return habits for a user
+export async function GET(request) {
   try {
-    const habits = readHabits();
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("userId");
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "userId is required" },
+        { status: 400 }
+      );
+    }
+
+    const habits = readData("habits").filter((h) => h.userId === userId);
+
     return NextResponse.json(habits);
   } catch (error) {
-    return NextResponse.json({ error: "Failed to load habits" }, { status: 500 });
+    console.error("Failed to load habits:", error);
+    return NextResponse.json(
+      { error: "Failed to load habits" },
+      { status: 500 }
+    );
   }
 }
 
-// POST — add a new habit
+// POST — create a new habit
 export async function POST(request) {
   try {
-    const { text } = await request.json();
+    const {
+      userId,
+      name,
+      identityStatement,
+      implementationIntention,
+      stackedOn,
+      time,
+      location,
+    } = await request.json();
 
-    if (!text || text.trim().length === 0) {
-      return NextResponse.json({ error: "Habit text is required" }, { status: 400 });
+    if (!userId || !name) {
+      return NextResponse.json(
+        { error: "userId and name are required" },
+        { status: 400 }
+      );
     }
 
-    if (text.trim().length > 200) {
-      return NextResponse.json({ error: "Keep it short — 200 characters max" }, { status: 400 });
-    }
+    const habits = readData("habits");
 
-    const habits = readHabits();
     const newHabit = {
-      id: `h${String(habits.length + 1).padStart(3, "0")}`,
-      text: text.trim(),
-      author: "Anonymous",
-      votes: 0,
-      createdAt: new Date().toISOString().split("T")[0],
+      id: generateId(),
+      userId,
+      name: name.trim(),
+      identityStatement: identityStatement || "",
+      implementationIntention: implementationIntention || "",
+      stackedOn: stackedOn || null,
+      time: time || "",
+      location: location || "",
+      currentDay: 0,
+      totalDays: 66,
+      graduated: false,
     };
 
     habits.push(newHabit);
-    writeHabits(habits);
+    writeData("habits", habits);
 
     return NextResponse.json(newHabit, { status: 201 });
   } catch (error) {
-    return NextResponse.json({ error: "Failed to save habit" }, { status: 500 });
+    console.error("Failed to create habit:", error);
+    return NextResponse.json(
+      { error: "Failed to create habit" },
+      { status: 500 }
+    );
   }
 }

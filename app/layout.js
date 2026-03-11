@@ -1,19 +1,19 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "habitspace solo — one habit, built to last",
+  title: "habitspace — Build the identity you want. One habit at a time.",
   description:
-    "Build one habit at a time. Start impossibly small, level up through consistency, and graduate when you've mastered it. Then pick the next one.",
+    "Based on Atomic Habits. Start impossibly small. Stack habits. Build identity-based habits with social accountability through groups. Free to use.",
   openGraph: {
-    title: "habitspace solo",
-    description: "One habit at a time. Built to last.",
+    title: "habitspace",
+    description: "Build the identity you want. One habit at a time.",
     type: "website",
   },
 };
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" data-theme="dark">
+    <html lang="en" data-theme="light">
       <body className="antialiased">
         {children}
       </body>
